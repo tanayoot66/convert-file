@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAV to BIN Converter</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+</head>
+
+<body>
+    <div class="container">
+        <h3>WAV to BIN Converter</h1>
+
+            <!-- ให้ใช้ id แยกแต่ละช่อง -->
+            <div class="row pb-3">
+                <div class="col-3">
+                    <input type="file" id="fileInput1" class="form-control mb-1" accept=".wav" multiple>
+                    <input type="file" id="fileInput2" class="form-control mb-1" accept=".wav" multiple>
+                    <input type="file" id="fileInput3" class="form-control mb-1" accept=".wav" multiple>
+                    <input type="file" id="fileInput4" class="form-control mb-1" accept=".wav" multiple>
+                    <input type="file" id="fileInput5" class="form-control" accept=".wav" multiple>
+                </div>
+            </div>
+
+            <button class="btn btn-success" onclick="convertAndDownload()">Convert & Download</button>
+
+            <a id="downloadLink" style="display: none;">Download Converted BIN</a>
+    </div>
+    <script>
+        // ให้ใช้ id แยกแต่ละช่อง
+        const fileInputs = [
+            document.getElementById('fileInput1'),
+            document.getElementById('fileInput2'),
+            document.getElementById('fileInput3'),
+            document.getElementById('fileInput4'),
+            document.getElementById('fileInput5')
+        ];
+
+        function convertAndDownload() {
+            let selectedFiles = [];
+
+            // เก็บไฟล์ที่ถูกเลือกจากทุกช่อง
+            for (const fileInput of fileInputs) {
+                selectedFiles = selectedFiles.concat(Array.from(fileInput.files));
+            }
+
+            if (selectedFiles.length === 0) {
+                alert('Please select at least one WAV file.');
+                return;
+            }
+
+            const filePromises = selectedFiles.map(file => readFile(file));
+
+            Promise.all(filePromises)
+                .then((binaryDataArray) => {
+                    const combinedData = new Uint8Array(binaryDataArray.reduce((acc, data) => [...acc, ...data], []));
+                    downloadBinaryFile(combinedData);
+                })
+                .catch((error) => {
+                    console.error('Error reading files:', error);
+                });
+        }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const arrayBuffer = reader.result;
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    resolve(uint8Array);
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function downloadBinaryFile(data) {
+            const blob = new Blob([data], {
+                type: 'application/octet-stream'
+            });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.getElementById('downloadLink');
+
+            downloadLink.href = url;
+            downloadLink.download = 'converted_file.bin';
+            downloadLink.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

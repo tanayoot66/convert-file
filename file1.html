@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAV to BIN Converter</title>
+</head>
+
+<body>
+    <h1>WAV to BIN Converter</h1>
+    <input type="file" id="wavInput" accept=".wav" multiple>
+    <button onclick="convertToBin()">Convert to BIN</button>
+    <button onclick="downloadBin()">Download BIN</button>
+
+    <script>
+        let wavFiles = [];
+
+        function convertToBin() {
+            const inputElement = document.getElementById('wavInput');
+            wavFiles = inputElement.files;
+
+            for (const file of wavFiles) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    const samples = new Int16Array(arrayBuffer);
+
+                    // นำไฟล์ .wav มาแปลงเป็น .bin
+                    const binData = new Uint8Array(samples.buffer);
+                    // นำไฟล์ .bin เก็บไว้ (สามารถใช้เมื่อต้องการดาวน์โหลด)
+                    window.binData = binData;
+                };
+
+                reader.readAsArrayBuffer(file);
+            }
+
+            alert('Conversion complete. You can now download the BIN file.');
+        }
+
+        function downloadBin() {
+            if (window.binData) {
+                const blob = new Blob([window.binData], {
+                    type: 'application/octet-stream'
+                });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'output.bin';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                alert('Please convert WAV to BIN first.');
+            }
+        }
+    </script>
+</body>
+
+</html>
